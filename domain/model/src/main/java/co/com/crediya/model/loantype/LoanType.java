@@ -13,11 +13,11 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder(toBuilder = true)
 public class LoanType {
-    private  Long id_loan;
+    private  Long idLoan;
     private  String name;
-    private BigDecimal min_amount;
-    private BigDecimal max_amount;
-    private  Double interest_rate;
-    private Boolean auto_validation;
+    private BigDecimal minAmount;
+    private BigDecimal maxAmount;
+    private  Double interestRate;
+    private Boolean autoValidation;
 
 }
