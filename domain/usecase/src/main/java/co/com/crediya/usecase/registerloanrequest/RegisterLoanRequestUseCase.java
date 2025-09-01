@@ -8,31 +8,32 @@ import co.com.crediya.model.user.gateways.UserGateway;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
-
 @RequiredArgsConstructor
 public class RegisterLoanRequestUseCase {
     private final UserGateway userGateway;
     private final LoanTypeGateway loanTypeGateway;
     private final LoanStatusGateway loanStatusGateway;
     private final LoanRequestGateway loanRequestGateway;
-
+    private static final String INITIAL_STATUS_CODE = "INITIAL_PENDING";
     public Mono<LoanRequest> execute(LoanRequest loanRequest) {
+
         return userGateway.findByDocument(loanRequest.getDocument())
                 .switchIfEmpty(Mono.error(new RuntimeException("Cliente no existe")))
-                .flatMap(user -> loanTypeGateway.findById(loanRequest.getLoanTypeId())
-                        .switchIfEmpty(Mono.error(new RuntimeException("Tipo de préstamo inválido")))
-                        .flatMap(loanType -> loanStatusGateway.findByName("Pendiente de revisión")
-                                .switchIfEmpty(Mono.error(new RuntimeException("Estado inicial no disponible")))
-                                .flatMap(status -> {
-                                    LoanRequest enrichedRequest = loanRequest.toBuilder()
-                                            .statusId(status.getIdStatus())
-                                            .build();
+                .flatMap(user -> {
+                    return loanTypeGateway.findById(loanRequest.getLoanTypeId())
+                            .switchIfEmpty(Mono.error(new RuntimeException("Tipo de préstamo inválido")))
+                            .flatMap(loanType -> {
+                                return loanStatusGateway.findByCode(INITIAL_STATUS_CODE)
+                                        .switchIfEmpty(Mono.error(new RuntimeException("Estado inicial no disponible")))
+                                        .flatMap(status -> {
+                                            LoanRequest enrichedRequest = loanRequest.toBuilder()
+                                                    .statusId(status.getIdStatus())
+                                                    .build();
 
-                                    return loanRequestGateway.save(enrichedRequest);
-                                })
-                        )
-                );
+                                            return loanRequestGateway.save(enrichedRequest);
+                                        });
+                            });
+                });
     }
 
 

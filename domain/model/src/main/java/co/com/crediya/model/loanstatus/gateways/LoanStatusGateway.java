@@ -4,5 +4,5 @@ import co.com.crediya.model.loanstatus.LoanStatus;
 import reactor.core.publisher.Mono;
 
 public interface LoanStatusGateway {
-    Mono<LoanStatus>findByName(String name);
+    Mono<LoanStatus>findByCode(String code);
 }

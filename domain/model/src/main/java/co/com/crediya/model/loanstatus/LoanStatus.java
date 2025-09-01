@@ -14,4 +14,5 @@ public class LoanStatus {
     private  Long idStatus;
     private  String name;
     private  String description;
+    private  String code;
 }
