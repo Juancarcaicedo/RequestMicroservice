@@ -6,5 +6,5 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 
 public interface LoanStatusReactiveRepository extends ReactiveCrudRepository<LoanStatusEntity,Long>, ReactiveQueryByExampleExecutor<LoanStatusEntity> {
-    Mono<LoanStatusEntity> findByName(String name);
+    Mono<LoanStatusEntity> findByCode(String code);
 }

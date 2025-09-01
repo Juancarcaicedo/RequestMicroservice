@@ -19,7 +19,6 @@ public class LoanStatusRepositoryAdapter extends ReactiveAdapterOperations<
 
     private final LoanStatusReactiveRepository repository;
     private final ObjectMapper mapper;
-
     public LoanStatusRepositoryAdapter(
             LoanStatusReactiveRepository repository,
             ObjectMapper mapper
@@ -30,9 +29,8 @@ public class LoanStatusRepositoryAdapter extends ReactiveAdapterOperations<
     }
 
     @Override
-    public Mono<LoanStatus> findByName(String name) {
-        return repository.findByName(name)
-                .map(entity -> mapper.map(entity, LoanStatus.class));
+    public Mono<LoanStatus> findByCode(String code) {
+        return repository.findByCode(code).map(entity -> mapper.map(entity, LoanStatus.class));
     }
 }
 

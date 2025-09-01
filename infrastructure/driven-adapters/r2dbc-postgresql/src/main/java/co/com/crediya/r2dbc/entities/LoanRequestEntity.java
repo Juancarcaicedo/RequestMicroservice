@@ -26,7 +26,7 @@ public class LoanRequestEntity {
     @Column("loan_type_id")
     private  Long loanTypeId;
     @Column("status_id")
-    private  Long status;
+    private  Long statusId;
     @Column("document")
     private  String document;
 

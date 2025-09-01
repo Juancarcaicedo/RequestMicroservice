@@ -19,4 +19,6 @@ public class LoanStatusEntity {
     private  String name;
     @Column("description")
     private  String description;
+    @Column("code")
+    private  String code;
 }
