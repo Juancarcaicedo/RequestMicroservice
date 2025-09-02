@@ -2,10 +2,12 @@ package co.com.crediya.api.erros;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import exceptions.BusinessException;
 import org.springframework.boot.web.reactive.error.ErrorWebExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.MediaType;
 import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
@@ -18,56 +20,60 @@ import org.springframework.web.server.ServerWebExchange;
 public class GlobalExceptionHandlerConfig implements ErrorWebExceptionHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
         ErrorCode errorCode;
-        String detail = ex.getMessage();
+        String detail;
 
         if (ex instanceof AppException appEx) {
             errorCode = appEx.getErrorCode();
             detail = appEx.getDetail();
-        } else {
-            errorCode = ErrorCode.UNEXPECTED_ERROR;
+        } else if (ex instanceof BusinessException businessEx) {
+            errorCode = ErrorCode.BUSINESS_RULE_VIOLATION;
+            detail = businessEx.getRule().getMessage();
+
         }
 
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(errorCode.getStatus());
-        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        else {
+            errorCode = ErrorCode.UNEXPECTED_ERROR;
+            detail = ex.getMessage();
+        }
 
         ErrorResponse errorResponse = new ErrorResponse(
                 errorCode.getCode(),
                 errorCode.getMessage(),
-                detail
+                detail,
+                errorCode.getLevel().name()
         );
+
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(errorCode.getStatus());
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         try {
             byte[] bytes = objectMapper
                     .writeValueAsString(errorResponse)
                     .getBytes(StandardCharsets.UTF_8);
 
-            return response.writeWith(Mono.just(
-                    response.bufferFactory().wrap(bytes)
-            ));
+            DataBuffer buffer = response.bufferFactory().wrap(bytes);
+            return response.writeWith(Mono.just(buffer));
         } catch (Exception e) {
             return Mono.error(e);
         }
     }
-
-    public record ErrorResponse(String code, String message, String detail) {}
-
-    // excepción interna que se lanza con ErrorCode
-    public static class AppException extends RuntimeException {
-        private final ErrorCode errorCode;
-        private final String detail;
-
-        public AppException(ErrorCode errorCode, String detail) {
-            super(detail);
-            this.errorCode = errorCode;
-            this.detail = detail;
+    private Throwable unwrap(Throwable ex) {
+        while (ex.getCause() != null && !(ex instanceof AppException || ex instanceof BusinessException)) {
+            ex = ex.getCause();
         }
-
-        public ErrorCode getErrorCode() { return errorCode; }
-        public String getDetail() { return detail; }
+        return ex;
     }
+    public record ErrorResponse(
+            String code,
+            String message,
+            String detail,
+            String level
+    ) {}
 }
+
 

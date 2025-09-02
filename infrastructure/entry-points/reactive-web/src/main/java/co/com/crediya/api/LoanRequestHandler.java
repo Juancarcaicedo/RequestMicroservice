@@ -1,6 +1,8 @@
 package co.com.crediya.api;
 
 import co.com.crediya.api.dtos.request.LoanRequestDTO;
+import co.com.crediya.api.erros.AppException;
+import co.com.crediya.api.erros.ErrorCode;
 import co.com.crediya.api.mapper.LoanRequestMapper;
 import co.com.crediya.usecase.registerloanrequest.RegisterLoanRequestUseCase;
 import jakarta.validation.ConstraintViolation;
@@ -33,7 +35,9 @@ public class LoanRequestHandler {
                     if (!violations.isEmpty()) {
                         String errorMessage = violations.iterator().next().getMessage();
                         log.warn("Fallo al validar solicitud: {}", errorMessage);
-                        return ServerResponse.status(HttpStatus.BAD_REQUEST).bodyValue(errorMessage);
+
+                        // Lanzamos excepción semántica
+                        throw new AppException(ErrorCode.VALIDATION_ERROR, errorMessage);
                     }
 
                     return registerLoanRequestUseCase.execute(mapper.toDomain(dto))
@@ -47,3 +51,4 @@ public class LoanRequestHandler {
                 });
     }
 }
+
